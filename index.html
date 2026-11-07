@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GOLDTECH Voice — clone your voice</title>
+<style>
+  :root{
+    --bg:#0b0b0f; --panel:#141419; --panel2:#1b1b22; --line:#2a2a33;
+    --gold:#e8b64c; --gold2:#f5d78a; --txt:#ececf1; --mut:#9a9aa6; --mut2:#6c6c78;
+    --ok:#4ade80; --err:#f87171; --rad:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#1a160c 0%,var(--bg) 55%);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans;line-height:1.5;min-height:100vh}
+  a{color:var(--gold)}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:6px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--gold),#a9762a);
+    display:grid;place-items:center;font-size:22px;box-shadow:0 4px 18px rgba(232,182,76,.25)}
+  h1{font-size:22px;margin:0;letter-spacing:.3px}
+  .brand small{display:block;color:var(--mut);font-size:12px;font-weight:400}
+  .engine-btn{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);
+    color:var(--txt);padding:9px 14px;border-radius:10px;cursor:pointer;font-size:13px;transition:.15s}
+  .engine-btn:hover{border-color:var(--gold)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--mut2)}
+  .dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .sub{color:var(--mut);font-size:14px;margin:2px 0 24px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);padding:20px;margin-bottom:18px}
+  .card h2{font-size:14px;margin:0 0 14px;color:var(--gold2);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  label.lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mut);margin-bottom:8px}
+  label.lbl .opt{color:var(--mut2);font-size:12px}
+  textarea{width:100%;min-height:170px;resize:vertical;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;color:var(--txt);padding:14px;font-size:15px;font-family:inherit;line-height:1.6}
+  textarea:focus,input:focus{outline:none;border-color:var(--gold)}
+  .count{font-size:12px;color:var(--mut2);text-align:right;margin-top:6px}
+  .refrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:10px 16px;border-radius:10px;
+    cursor:pointer;font-size:14px;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{border-color:var(--gold)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.rec{border-color:#5a2a2a}
+  .btn.rec.active{background:#3a1414;border-color:var(--err);color:#ffb4b4;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.35)}50%{box-shadow:0 0 0 7px rgba(248,113,113,0)}}
+  .refchip{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;padding:8px 12px;font-size:13px;flex:1;min-width:220px}
+  .refchip .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .refchip .dur{color:var(--gold2);font-variant-numeric:tabular-nums}
+  .refchip button{background:none;border:none;color:var(--mut);cursor:pointer;font-size:16px}
+  audio{width:100%;margin-top:12px;height:40px}
+  .hint{font-size:12.5px;color:var(--mut2);margin-top:10px}
+  .adv-toggle{background:none;border:none;color:var(--gold);cursor:pointer;font-size:13px;padding:0;display:flex;align-items:center;gap:6px}
+  .adv{display:none;margin-top:16px;grid-template-columns:1fr 1fr;gap:18px}
+  .adv.open{display:grid}
+  .field label{font-size:13px;color:var(--mut);display:flex;justify-content:space-between;margin-bottom:6px}
+  .field label b{color:var(--gold2);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--gold)}
+  input[type=number],input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    color:var(--txt);padding:9px 11px;font-size:14px}
+  .consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mut);margin:4px 0 16px}
+  .consent input{margin-top:3px;accent-color:var(--gold);width:16px;height:16px}
+  .generate{width:100%;background:linear-gradient(135deg,var(--gold),#c9952f);border:none;color:#1a1405;font-weight:700;
+    font-size:16px;padding:15px;border-radius:12px;cursor:pointer;transition:.15s;letter-spacing:.3px}
+  .generate:hover:not(:disabled){filter:brightness(1.07);transform:translateY(-1px)}
+  .generate:disabled{opacity:.5;cursor:not-allowed}
+  .progress{display:none;margin-top:16px}
+  .progress.show{display:block}
+  .bar{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s}
+  .pmsg{font-size:13px;color:var(--mut);margin-top:8px;display:flex;justify-content:space-between}
+  .cancel{background:none;border:none;color:var(--err);cursor:pointer;font-size:13px}
+  .result{display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+  .result.show{display:block}
+  .dlrow{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .dl{flex:1;text-align:center;text-decoration:none;background:var(--panel2);border:1px solid var(--gold);color:var(--gold2);
+    padding:11px;border-radius:10px;font-size:14px;font-weight:600}
+  .dl:hover{background:#221c0e}
+  .log{background:#0e0e13;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--mut);max-height:180px;overflow-y:auto;white-space:pre-wrap}
+  .log .t{color:var(--mut2)}
+  .log .ok{color:var(--ok)} .log .err{color:var(--err)} .log .gold{color:var(--gold2)}
+  /* modal */
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(3px);z-index:50;place-items:center;padding:20px}
+  .modal.show{display:grid}
+  .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:480px;width:100%}
+  .modal-box h3{margin:0 0 6px;font-size:18px}
+  .modal-box p{color:var(--mut);font-size:13.5px;margin:0 0 16px}
+  .modal-box input{margin-bottom:12px}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+  .testline{font-size:13px;margin:4px 0 12px;min-height:18px}
+  .testline.ok{color:var(--ok)} .testline.err{color:var(--err)}
+  .steps{font-size:12.5px;color:var(--mut2);margin:14px 0 0;padding-left:18px}
+  .steps li{margin-bottom:4px}
+  /* engine setup modal */
+  .modal-box.wide{max-width:780px;max-height:90vh;overflow:auto}
+  .platforms{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+  .platform{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column}
+  .p-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+  .platform h4{margin:0;font-size:14px}
+  .badge{font-size:11px;color:var(--gold2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+  .launch{display:block;text-align:center;background:linear-gradient(135deg,var(--gold),#c9952f);color:#1a1405;font-weight:700;
+    text-decoration:none;padding:9px;border-radius:9px;font-size:13px;margin-bottom:10px}
+  .launch:hover{filter:brightness(1.06)}
+  .platform .steps{margin:0;padding-left:16px;font-size:12px;flex:1}
+  .setup-note{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--mut);
+    background:#0e0e13;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:14px}
+  .setup-note a{font-weight:600;white-space:nowrap}
+  .drive-note{font-size:12px;color:var(--mut2);margin-top:8px}
+  footer{color:var(--mut2);font-size:12px;text-align:center;margin-top:30px}
+  @media(max-width:700px){.platforms{grid-template-columns:1fr}}
+  @media(max-width:600px){.adv{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">🎙️</div>
+      <div><h1>GOLDTECH Voice</h1><small>Clone your voice · powered by your free GPU (Kaggle / Colab / Lightning)</small></div>
+    </div>
+    <button class="engine-btn" id="engineBtn"><span class="dot" id="engineDot"></span><span id="engineLabel">Connect engine</span></button>
+  </header>
+  <p class="sub">Record a short sample of your voice, paste a script, and get a natural voiceover in your own voice.</p>
+
+  <!-- Reference voice -->
+  <div class="card">
+    <h2>1 · Your voice sample</h2>
+    <label class="lbl">Reference clip <span class="opt">15–20s of clear speech · quiet room · no music</span></label>
+    <div class="refrow">
+      <button class="btn rec" id="recBtn">⏺ Record</button>
+      <button class="btn" id="uploadBtn">⬆ Upload audio</button>
+      <input type="file" id="refFile" accept="audio/*" hidden />
+      <div class="refchip" id="refChip" style="display:none">
+        <span>🎤</span><span class="name" id="refName"></span><span class="dur" id="refDur"></span>
+        <button id="refRemove" title="Remove">✕</button>
+      </div>
+    </div>
+    <audio id="refPreview" controls style="display:none"></audio>
+    <div class="hint" id="recHint">Tip: read a paragraph naturally — vary your tone. The cleaner the sample, the closer the clone.</div>
+  </div>
+
+  <!-- Script -->
+  <div class="card">
+    <h2>2 · Script</h2>
+    <textarea id="script" placeholder="Paste or write what you want your voice to say…"></textarea>
+    <div class="count"><span id="wordCount">0</span> words · <span id="charCount">0</span> chars</div>
+  </div>
+
+  <!-- Settings + generate -->
+  <div class="card">
+    <h2>3 · Generate</h2>
+    <button class="adv-toggle" id="advToggle">⚙ Advanced settings <span id="advArrow">▸</span></button>
+    <div class="adv" id="adv">
+      <div class="field">
+        <label>Expressiveness <b id="tempVal">0.8</b></label>
+        <input type="range" id="temp" min="0.1" max="1.5" step="0.05" value="0.8" />
+        <div class="hint">Lower = steadier &amp; more faithful · higher = more dramatic</div>
+      </div>
+      <div class="field">
+        <label>Pause between chunks <b id="pauseVal">0.35s</b></label>
+        <input type="range" id="pause" min="0" max="2" step="0.05" value="0.35" />
+      </div>
+      <div class="field">
+        <label>Chunk size <b id="chunkVal">220 chars</b></label>
+        <input type="range" id="chunk" min="60" max="500" step="10" value="220" />
+      </div>
+      <div class="field">
+        <label>Seed <span class="opt" style="color:var(--mut2)">optional · for repeatable takes</span></label>
+        <input type="number" id="seed" placeholder="random" />
+      </div>
+    </div>
+    <div class="consent" style="margin-top:16px">
+      <input type="checkbox" id="consent" />
+      <label for="consent">This is my own voice, or I have explicit permission to clone it. I won't use it to impersonate or deceive.</label>
+    </div>
+    <button class="generate" id="genBtn" disabled>Connect engine to generate</button>
+    <div class="progress" id="progress">
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="pmsg"><span id="pMsg">Starting…</span><button class="cancel" id="cancelBtn">Cancel</button></div>
+    </div>
+    <div class="result" id="result">
+      <label class="lbl">Your voiceover</label>
+      <audio id="outAudio" controls></audio>
+      <div class="dlrow">
+        <a class="dl" id="dlWav" download="goldtech-voiceover.wav">⬇ Download WAV</a>
+        <a class="dl" id="dlMp3" download="goldtech-voiceover.mp3">⬇ Download MP3</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity -->
+  <div class="card">
+    <h2>Activity</h2>
+    <div class="log" id="log"><span class="t">No activity yet — add your voice and a script, then press Generate.</span></div>
+  </div>
+
+  <footer>GOLDTECH Voice · Chatterbox Turbo (MIT) runs on your own free GPU · audio never touches a third-party server</footer>
+</div>
+
+<!-- Engine setup + connect modal -->
+<div class="modal" id="modal">
+  <div class="modal-box wide">
+    <h3>Engine setup &amp; connection</h3>
+    <p>Run the notebook on a free GPU, then paste the <code>https://….trycloudflare.com</code> URL it prints. One notebook works on all three platforms.</p>
+
+    <div class="platforms">
+      <div class="platform">
+        <div class="p-head"><h4>Kaggle</h4><span class="badge">T4 x2 · ~30h/wk</span></div>
+        <a class="launch" id="launchKaggle" href="https://www.kaggle.com/code" target="_blank" rel="noopener">Open Kaggle ↗</a>
+        <ol class="steps">
+          <li>Import <b>GOLDTECH_Voice.ipynb</b> (File → Import Notebook).</li>
+          <li>Settings → <b>Internet ON</b> · <b>GPU T4 x2</b>.</li>
+          <li><b>Run All</b>; copy the tunnel URL from the last cell.</li>
+        </ol>
+      </div>
+      <div class="platform">
+        <div class="p-head"><h4>Google Colab</h4><span class="badge">T4 · free tier</span></div>
+        <a class="launch" id="launchColab" href="https://colab.research.google.com/" target="_blank" rel="noopener">Open Colab ↗</a>
+        <ol class="steps">
+          <li>Upload/open <b>GOLDTECH_Voice.ipynb</b>.</li>
+          <li>Runtime → Change runtime type → <b>T4 GPU</b>.</li>
+          <li><b>Run all</b>; copy the tunnel URL from the last cell.</li>
+        </ol>
+        <div class="drive-note">Optional Google Drive prompt only <b>caches the model</b> so it doesn't re-download each session. It does not store your voice.</div>
+      </div>
+      <div class="platform">
+        <div class="p-head"><h4>Lightning AI</h4><span class="badge">credits · persistent</span></div>
+        <a class="launch" id="launchLightning" href="https://lightning.ai/studios" target="_blank" rel="noopener">Open Lightning Studio ↗</a>
+        <ol class="steps">
+          <li>Create a Studio with a <b>GPU</b> runtime.</li>
+          <li>Upload <b>GOLDTECH_Voice.ipynb</b> and open it.</li>
+          <li><b>Run All</b>; copy the tunnel URL from the last cell.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="setup-note">
+      <a id="dlNotebook" href="colab/GOLDTECH_Voice.ipynb" download>⬇ Download notebook</a>
+      <span id="linkStatus">Import/upload this notebook on your chosen platform, then paste the engine URL below.</span>
+    </div>
+
+    <input type="text" id="engineUrl" placeholder="https://xxxx.trycloudflare.com" inputmode="url" spellcheck="false" />
+    <div class="testline" id="testLine"></div>
+    <div class="modal-actions">
+      <button class="btn" id="testBtn">Test connection</button>
+      <button class="btn" id="closeModal">Cancel</button>
+      <button class="generate" style="width:auto;padding:10px 20px;font-size:14px" id="saveEngine">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const LS_KEY = "gt-voice-engine";
+/* To enable true one-click "Open in Kaggle/Colab", set this to the PUBLIC GitHub
+   blob URL of GOLDTECH_Voice.ipynb, e.g.
+   https://github.com/USER/REPO/blob/main/colab/GOLDTECH_Voice.ipynb
+   Leave empty to use platform home pages + the notebook download button. */
+const NOTEBOOK_GITHUB_URL = "";
+const NOTEBOOK_FILE = "colab/GOLDTECH_Voice.ipynb";
+let engine = localStorage.getItem(LS_KEY) || "";
+let refBlob = null, refName = "", refSeconds = 0;
+let mediaRec = null, recChunks = [], recStream = null, recTimer = null, recStart = 0;
+let currentJob = null, pollTimer = null, cancelled = false;
+
+/* ---------- logging ---------- */
+function log(msg, cls=""){
+  const el = $("log");
+  if(el.querySelector(".t") && el.textContent.startsWith("No activity")) el.innerHTML="";
+  const t = new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  el.innerHTML += `<span class="t">[${t}]</span> <span class="${cls}">${escapeHtml(msg)}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+function escapeHtml(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+/* ---------- engine ---------- */
+function normUrl(u){u=String(u||"").trim();if(!u)return"";if(!/^https?:\/\//i.test(u))u="https://"+u;return u.replace(/\/+$/,"");}
+function refreshEngine(){
+  const on = !!engine;
+  $("engineDot").classList.toggle("on", on);
+  $("engineLabel").textContent = on ? new URL(engine).host : "Connect engine";
+  updateGenBtn();
+}
+async function testEngine(url){
+  const u = normUrl(url);
+  if(!u) return {ok:false,msg:"Enter a URL first."};
+  try{
+    const r = await fetch(u+"/api/health",{cache:"no-store"});
+    if(!r.ok) return {ok:false,msg:"Engine responded "+r.status};
+    const j = await r.json();
+    return {ok:true,msg:`Connected · ${j.model||"engine"} · ${j.gpu?"GPU":"CPU"}${j.warm?" · warm":""}`};
+  }catch(e){return {ok:false,msg:"Not reachable — is the notebook running and the URL correct?"};}
+}
+function platformLinks(){
+  const gh = NOTEBOOK_GITHUB_URL.trim();
+  const m = gh.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+\.ipynb)$/i);
+  if(m){
+    return {
+      direct:true,
+      kaggle:"https://www.kaggle.com/notebooks/welcome?src="+encodeURIComponent(gh),
+      colab:`https://colab.research.google.com/github/${m[1]}/${m[2]}/blob/${m[3]}/${m[4]}`,
+      lightning:"https://lightning.ai/studios"
+    };
+  }
+  return {direct:false, kaggle:"https://www.kaggle.com/code", colab:"https://colab.research.google.com/", lightning:"https://lightning.ai/studios"};
+}
+function setupPlatformLinks(){
+  const L = platformLinks();
+  $("launchKaggle").href = L.kaggle;
+  $("launchColab").href = L.colab;
+  $("launchLightning").href = L.lightning;
+  $("dlNotebook").href = NOTEBOOK_FILE;
+  $("launchKaggle").textContent = L.direct ? "Open in Kaggle ↗" : "Open Kaggle ↗";
+  $("launchColab").textContent = L.direct ? "Open in Colab ↗" : "Open Colab ↗";
+  $("linkStatus").textContent = L.direct
+    ? "One-click notebook links are active. After Run All, paste the engine URL below."
+    : "Download/import this notebook on your chosen platform, then paste the engine URL below.";
+}
+setupPlatformLinks();
+$("engineBtn").onclick = ()=>{ $("engineUrl").value=engine; $("testLine").textContent=""; $("testLine").className="testline"; $("modal").classList.add("show"); };
+$("closeModal").onclick = ()=> $("modal").classList.remove("show");
+$("modal").onclick = e=>{ if(e.target===$("modal")) $("modal").classList.remove("show"); };
+$("testBtn").onclick = async ()=>{
+  $("testLine").textContent="Testing…"; $("testLine").className="testline";
+  const res = await testEngine($("engineUrl").value);
+  $("testLine").textContent = (res.ok?"● ":"● ")+res.msg;
+  $("testLine").className = "testline "+(res.ok?"ok":"err");
+};
+$("saveEngine").onclick = async ()=>{
+  const u = normUrl($("engineUrl").value);
+  if(!u){ $("testLine").textContent="Enter a URL."; $("testLine").className="testline err"; return; }
+  const res = await testEngine(u);
+  if(!res.ok){ $("testLine").textContent="● "+res.msg; $("testLine").className="testline err"; return; }
+  engine = u; localStorage.setItem(LS_KEY, u);
+  $("modal").classList.remove("show"); refreshEngine(); log("Engine connected: "+new URL(u).host,"ok");
+};
+
+/* ---------- reference: upload ---------- */
+$("uploadBtn").onclick = ()=> $("refFile").click();
+$("refFile").onchange = e=>{ const f=e.target.files[0]; if(f) setReference(f, f.name); e.target.value=""; };
+function setReference(blob, name){
+  refBlob = blob; refName = name;
+  const url = URL.createObjectURL(blob);
+  $("refPreview").src = url; $("refPreview").style.display="block";
+  $("refChip").style.display="flex"; $("refName").textContent=name; $("refDur").textContent="…";
+  const a = new Audio(url);
+  a.onloadedmetadata = ()=>{ refSeconds=a.duration; $("refDur").textContent=a.duration.toFixed(1)+"s";
+    if(a.duration<6) log("Reference is under 6s — aim for 15–20s for an accurate clone.","err"); };
+  updateGenBtn();
+}
+$("refRemove").onclick = ()=>{ refBlob=null; refSeconds=0; $("refChip").style.display="none"; $("refPreview").style.display="none"; $("refPreview").src=""; updateGenBtn(); };
+
+/* ---------- reference: record ---------- */
+$("recBtn").onclick = async ()=>{
+  if(mediaRec && mediaRec.state==="recording"){ mediaRec.stop(); return; }
+  try{
+    recStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  }catch(e){ log("Microphone access denied. You can upload an audio file instead.","err"); return; }
+  recChunks=[];
+  const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")?"audio/webm;codecs=opus":"audio/webm";
+  mediaRec = new MediaRecorder(recStream,{mimeType:mime});
+  mediaRec.ondataavailable = e=>{ if(e.data.size) recChunks.push(e.data); };
+  mediaRec.onstop = ()=>{
+    recStream.getTracks().forEach(t=>t.stop());
+    clearInterval(recTimer); $("recBtn").classList.remove("active"); $("recBtn").textContent="⏺ Record";
+    const blob = new Blob(recChunks,{type:mime});
+    const secs = (Date.now()-recStart)/1000;
+    setReference(blob, `recording-${secs.toFixed(0)}s.webm`);
+    log(`Recorded ${secs.toFixed(1)}s reference.`,"gold");
+    if(secs<10) log("Aim for 15–20s next time for a closer match.","");
+  };
+  mediaRec.start(); recStart=Date.now();
+  $("recBtn").classList.add("active"); 
+  recTimer=setInterval(()=>{ const s=(Date.now()-recStart)/1000; $("recBtn").textContent=`⏹ Stop · ${s.toFixed(0)}s`; },200);
+  log("Recording… speak naturally, then press Stop.","gold");
+};
+
+/* ---------- script counts ---------- */
+function counts(){
+  const v=$("script").value;
+  $("charCount").textContent=v.length;
+  $("wordCount").textContent=v.trim()?v.trim().split(/\s+/).length:0;
+  updateGenBtn();
+}
+$("script").oninput=counts;
+
+/* ---------- advanced ---------- */
+$("advToggle").onclick=()=>{ const o=$("adv").classList.toggle("open"); $("advArrow").textContent=o?"▾":"▸"; };
+$("temp").oninput=()=>$("tempVal").textContent=(+$("temp").value).toFixed(2);
+$("pause").oninput=()=>$("pauseVal").textContent=(+$("pause").value).toFixed(2)+"s";
+$("chunk").oninput=()=>$("chunkVal").textContent=$("chunk").value+" chars";
+$("consent").onchange=updateGenBtn;
+
+/* ---------- generate button state ---------- */
+function updateGenBtn(){
+  const ready = engine && refBlob && $("script").value.trim() && $("consent").checked;
+  const btn=$("genBtn");
+  btn.disabled = !ready || (currentJob!==null);
+  if(!engine) btn.textContent="Connect engine to generate";
+  else if(!refBlob) btn.textContent="Add your voice sample";
+  else if(!$("script").value.trim()) btn.textContent="Write a script";
+  else if(!$("consent").checked) btn.textContent="Confirm voice permission";
+  else btn.textContent="🎙 Generate voiceover";
+}
+
+/* ---------- generate + poll ---------- */
+$("genBtn").onclick = async ()=>{
+  cancelled=false;
+  $("result").classList.remove("show");
+  $("progress").classList.add("show"); $("barFill").style.width="0%"; $("pMsg").textContent="Uploading…";
+  updateGenBtn();
+  log("Sending script + reference to engine…","gold");
+  const fd=new FormData();
+  fd.append("script",$("script").value);
+  fd.append("reference",refBlob,refName||"reference.webm");
+  fd.append("temperature",$("temp").value);
+  fd.append("pause",$("pause").value);
+  fd.append("max_chars",$("chunk").value);
+  fd.append("seed",$("seed").value);
+  fd.append("consent","true");
+  let resp;
+  try{ resp=await fetch(engine+"/api/jobs",{method:"POST",body:fd}); }
+  catch(e){ fail("Couldn't reach the engine. Is the notebook still running?"); return; }
+  if(!resp.ok){ const j=await resp.json().catch(()=>({})); fail(j.detail||("Engine rejected the request ("+resp.status+").")); return; }
+  const j=await resp.json(); currentJob=j.job_id;
+  log("Job started: "+currentJob,"");
+  pollTimer=setInterval(poll,1500); poll();
+};
+async function poll(){
+  if(!currentJob) return;
+  let j;
+  try{ const r=await fetch(engine+"/api/jobs/"+currentJob,{cache:"no-store"}); if(!r.ok) return; j=await r.json(); }
+  catch(e){ return; }
+  $("barFill").style.width=Math.round((j.progress||0)*100)+"%";
+  $("pMsg").textContent=j.message||j.status;
+  if(j.status==="done"){
+    clearInterval(pollTimer); currentJob=null;
+    $("barFill").style.width="100%";
+    const wav=engine+"/api/jobs/"+j.id+"/audio", mp3=engine+"/api/jobs/"+j.id+"/mp3";
+    $("outAudio").src=wav; $("dlWav").href=wav;
+    if(j.mp3){ $("dlMp3").href=mp3; $("dlMp3").style.display=""; } else $("dlMp3").style.display="none";
+    $("result").classList.add("show"); $("progress").classList.remove("show");
+    log(`Done · ${j.duration}s · ${j.chunks_total} chunk(s). Reference was ${j.reference?.seconds||"?"}s.`,"ok");
+    updateGenBtn();
+  } else if(j.status==="error"||j.status==="cancelled"){
+    clearInterval(pollTimer); currentJob=null;
+    $("progress").classList.remove("show");
+    if(j.status==="error") fail(j.error||j.message||"Generation failed.");
+    else log("Cancelled.","");
+    updateGenBtn();
+  }
+}
+function fail(msg){ $("progress").classList.remove("show"); currentJob=null; clearInterval(pollTimer); log(msg,"err"); updateGenBtn(); }
+$("cancelBtn").onclick=async ()=>{ if(!currentJob)return; cancelled=true;
+  try{ await fetch(engine+"/api/jobs/"+currentJob+"/cancel",{method:"POST"}); }catch(e){}
+  log("Cancelling…",""); };
+
+refreshEngine(); counts();
+</script>
+</body>
+</html>
